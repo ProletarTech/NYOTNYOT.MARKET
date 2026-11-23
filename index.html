@@ -1,90 +1,217 @@
-<!doctype html>
+from pathlib import Path
+import zipfile
+
+base = Path("/mnt/data/bib-number-link-hub-v2")
+base.mkdir(exist_ok=True)
+
+html = r'''<!doctype html>
 <html lang="id">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#101114">
-  <meta name="description" content="Temukan Bib Number di marketplace dan media sosial resmi.">
-  <title>Bib Number — Official Links</title>
+  <meta name="theme-color" content="#111214">
+  <meta name="description" content="Semua tautan resmi Bib Number — marketplace dan media sosial.">
+  <title>Bib Number | Official Links</title>
   <style>
-    :root{color-scheme:dark;--bg:#101114;--panel:#1a1c21;--line:#30333b;--muted:#a7abb5;--accent:#ff7548}
+    :root{
+      color-scheme:dark;
+      --bg:#111214;--surface:#1b1d21;--surface-hover:#24272d;
+      --text:#f7f7f5;--muted:#aeb1b8;--line:#34373e;
+      --orange:#ff7548;--orange-soft:#ff9a72;
+    }
     *{box-sizing:border-box}
-    body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0%,#29201e 0,#101114 48%);color:#f7f7f8;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;display:grid;place-items:center;padding:28px 16px}
-    .wrap{width:min(100%,460px)}
-    header{text-align:center;margin-bottom:25px}
-    .mark{width:76px;height:76px;margin:0 auto 15px;border:1px solid #55505a;border-radius:22px;display:grid;place-items:center;background:linear-gradient(145deg,#292b31,#17181d);font-weight:900;font-size:22px;letter-spacing:-2px}
-    h1{font-size:29px;letter-spacing:2px;margin:0;font-weight:850}
-    .sub{color:var(--muted);font-size:12px;letter-spacing:2px;margin-top:8px}
-    .intro{color:#d1d3d8;text-align:center;font-size:14px;line-height:1.6;margin:22px 0}
-    .links{display:grid;gap:11px}
-    .link{display:flex;align-items:center;gap:14px;padding:15px 16px;border:1px solid var(--line);border-radius:16px;background:rgba(26,28,33,.92);color:inherit;text-decoration:none;transition:transform .18s,border-color .18s,background .18s}
-    .link:hover{transform:translateY(-2px);border-color:#77717a;background:#22242a}
-    .icon{width:43px;height:43px;flex:none;border-radius:13px;background:#2b2d34;display:grid;place-items:center;font-size:20px;font-weight:800}
-    .meta{min-width:0;flex:1}
-    .name{font-size:15px;font-weight:750}
-    .desc{font-size:12px;color:var(--muted);margin-top:3px}
-    .arrow{font-size:20px;color:#b9bbc2}
-    .qrbox{margin-top:24px;padding:18px;border:1px solid var(--line);border-radius:18px;background:rgba(26,28,33,.75);text-align:center}
-    .qrbox h2{font-size:13px;letter-spacing:1.2px;margin:0 0 12px}
-    #qrcode{display:inline-flex;align-items:center;justify-content:center;background:#fff;padding:10px;border-radius:10px;min-width:164px;min-height:164px}
-    #qrcode img,#qrcode canvas{display:block!important;max-width:144px}
-    .qrnote{font-size:11px;color:var(--muted);line-height:1.5;margin:11px 0 0}
-    footer{text-align:center;color:#777b85;font-size:11px;margin-top:22px}
-    @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;min-height:100vh;padding:34px 18px 26px;
+      display:flex;justify-content:center;align-items:center;
+      background:
+        radial-gradient(ellipse at 50% -10%,rgba(255,117,72,.18),transparent 42%),
+        linear-gradient(180deg,#151619 0%,var(--bg) 60%);
+      color:var(--text);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+    }
+    .page{width:min(100%,470px);margin:auto}
+    .brand{text-align:center;margin-bottom:25px}
+    .logo{
+      width:76px;height:76px;margin:0 auto 15px;position:relative;
+      display:grid;place-items:center;border:1px solid #55545a;border-radius:20px;
+      background:linear-gradient(145deg,#292b30,#191a1e);
+      box-shadow:0 12px 34px rgba(0,0,0,.25);
+      font-size:22px;font-weight:950;letter-spacing:-2px;
+    }
+    .logo:after{content:"";position:absolute;bottom:-5px;left:13px;right:13px;height:5px;background:var(--orange);border-radius:0 0 4px 4px}
+    h1{margin:0;font-size:30px;line-height:1.1;letter-spacing:2.5px;font-weight:900}
+    .eyebrow{margin-top:9px;color:var(--orange-soft);font-size:10px;font-weight:800;letter-spacing:2.6px}
+    .intro{text-align:center;margin:21px 8px 22px;color:#d7d8dc;font-size:14px;line-height:1.65}
+    .section-label{margin:0 0 11px 3px;color:var(--muted);font-size:10px;font-weight:800;letter-spacing:1.8px;text-transform:uppercase}
+    .links{display:grid;gap:10px}
+    .link{
+      min-height:76px;padding:13px 15px;display:flex;align-items:center;gap:13px;
+      border:1px solid var(--line);border-radius:16px;background:rgba(27,29,33,.94);
+      color:var(--text);text-decoration:none;
+      transition:transform .18s ease,border-color .18s ease,background .18s ease;
+    }
+    .link:hover,.link:focus-visible{transform:translateY(-2px);border-color:#777078;background:var(--surface-hover);outline:none}
+    .platform-icon{
+      width:45px;height:45px;flex:none;display:grid;place-items:center;
+      border-radius:13px;background:#2b2d32;color:#fff;
+    }
+    .platform-icon svg{width:22px;height:22px;display:block}
+    .link-copy{min-width:0;flex:1}
+    .link-title{display:block;font-size:15px;font-weight:800;line-height:1.3}
+    .link-desc{display:block;margin-top:4px;color:var(--muted);font-size:12px;line-height:1.35}
+    .arrow{color:#bfc1c7;font-size:20px;line-height:1}
+    .qr-card{
+      margin-top:22px;padding:19px 16px 16px;text-align:center;
+      border:1px solid var(--line);border-radius:19px;
+      background:linear-gradient(145deg,rgba(34,35,39,.96),rgba(23,24,28,.96));
+    }
+    .qr-title{margin:0;font-size:12px;font-weight:900;letter-spacing:2px}
+    .qr-sub{margin:7px 0 14px;color:var(--muted);font-size:11px;line-height:1.5}
+    #qrcode{
+      width:174px;height:174px;margin:0 auto;padding:10px;display:grid;place-items:center;
+      background:#fff;border-radius:12px;
+    }
+    #qrcode img,#qrcode canvas{display:block!important;width:154px!important;height:154px!important}
+    .qr-status{min-height:16px;margin:11px 0 0;color:var(--muted);font-size:10px;line-height:1.45}
+    .qr-download{
+      margin-top:12px;padding:9px 14px;border:1px solid #55545a;border-radius:999px;
+      background:transparent;color:#f5f5f5;font:inherit;font-size:11px;font-weight:750;
+      cursor:pointer;transition:background .18s,border-color .18s;
+    }
+    .qr-download:hover{background:#303238;border-color:#777}
+    footer{margin-top:23px;text-align:center;color:#777b83;font-size:10px;letter-spacing:.8px}
+    .accent{color:var(--orange)}
+    @media(max-width:380px){body{padding:25px 14px}.link{padding:12px}.link-desc{font-size:11px}h1{font-size:27px}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
   </style>
 </head>
 <body>
-  <main class="wrap">
-    <header>
-      <div class="mark" aria-hidden="true">BN</div>
+  <main class="page">
+    <header class="brand">
+      <div class="logo" aria-label="Bib Number">BN</div>
       <h1>BIB NUMBER</h1>
-      <div class="sub">OFFICIAL SOCIAL & MARKETPLACE</div>
+      <div class="eyebrow">OFFICIAL SOCIAL &amp; MARKETPLACE</div>
     </header>
-    <p class="intro">Temukan Bib Number di platform pilihan kamu.</p>
 
-    <nav class="links" aria-label="Tautan resmi Bib Number">
-      <a class="link" href="https://s.shopee.co.id/7fbc0jbkAs" target="_blank" rel="noopener noreferrer">
-        <span class="icon" aria-hidden="true">🛍</span>
-        <span class="meta"><span class="name">Shopee</span><span class="desc">Belanja produk Bib Number</span></span>
-        <span class="arrow" aria-hidden="true">↗</span>
-      </a>
-      <a class="link" href="https://vt.tiktok.com/ZS9PyUQ3nk3K3-FrKZF/" target="_blank" rel="noopener noreferrer">
-        <span class="icon" aria-hidden="true">♪</span>
-        <span class="meta"><span class="name">TikTok</span><span class="desc">Video dan konten terbaru</span></span>
-        <span class="arrow" aria-hidden="true">↗</span>
-      </a>
-      <a class="link" href="https://www.instagram.com/bib.number/" target="_blank" rel="noopener noreferrer">
-        <span class="icon" aria-hidden="true">◎</span>
-        <span class="meta"><span class="name">Instagram</span><span class="desc">Galeri dan informasi produk</span></span>
-        <span class="arrow" aria-hidden="true">↗</span>
-      </a>
-      <a class="link" href="https://www.threads.com/@bib.number" target="_blank" rel="noopener noreferrer">
-        <span class="icon" aria-hidden="true">@</span>
-        <span class="meta"><span class="name">Threads</span><span class="desc">Diskusi dan update terbaru</span></span>
-        <span class="arrow" aria-hidden="true">↗</span>
-      </a>
-    </nav>
+    <p class="intro">Satu tempat untuk terhubung dengan <strong>Bib Number</strong>.<br>Pilih platform favorit kamu di bawah ini.</p>
 
-    <section class="qrbox" aria-label="QR Code halaman ini">
-      <h2>SCAN TO CONNECT</h2>
-      <div id="qrcode" aria-live="polite"><span style="color:#222;font-size:12px">Memuat QR…</span></div>
-      <p class="qrnote" id="qrnote">QR Code akan mengarah ke halaman ini setelah website dipublikasikan.</p>
+    <section aria-labelledby="links-heading">
+      <h2 class="section-label" id="links-heading">Temukan kami</h2>
+      <nav class="links" aria-label="Tautan resmi Bib Number">
+        <a class="link" href="https://s.shopee.co.id/7fbc0jbkAs" target="_blank" rel="noopener noreferrer">
+          <span class="platform-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l1 13H4L5 8Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></svg>
+          </span>
+          <span class="link-copy"><span class="link-title">Shopee</span><span class="link-desc">Jelajahi dan belanja produk Bib Number</span></span>
+          <span class="arrow" aria-hidden="true">↗</span>
+        </a>
+
+        <a class="link" href="https://vt.tiktok.com/ZS9PyUQ3nk3K3-FrKZF/" target="_blank" rel="noopener noreferrer">
+          <span class="platform-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4v10.2a4.2 4.2 0 1 1-4-4.2"/><path d="M14 4c.7 2.8 2.5 4.4 5 4.8"/></svg>
+          </span>
+          <span class="link-copy"><span class="link-title">TikTok</span><span class="link-desc">Tonton video dan konten terbaru</span></span>
+          <span class="arrow" aria-hidden="true">↗</span>
+        </a>
+
+        <a class="link" href="https://www.instagram.com/bib.number/" target="_blank" rel="noopener noreferrer">
+          <span class="platform-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.5 6.5h.01"/></svg>
+          </span>
+          <span class="link-copy"><span class="link-title">Instagram</span><span class="link-desc">Lihat galeri, produk, dan aktivitas kami</span></span>
+          <span class="arrow" aria-hidden="true">↗</span>
+        </a>
+
+        <a class="link" href="https://www.threads.com/@bib.number" target="_blank" rel="noopener noreferrer">
+          <span class="platform-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19.2 8.7c-.7-3.3-3.1-5.2-6.7-5.2-4.4 0-7.2 3.1-7.2 8.2 0 5.3 2.8 8.8 7.3 8.8 3.7 0 6.1-2.1 6.1-5.1 0-2.5-1.7-4-4.6-4-2.3 0-3.8 1.1-3.8 2.8 0 1.4 1 2.3 2.5 2.3 1.7 0 2.8-1.1 2.8-3.1 0-4-1.8-6.3-5.1-6.3"/></svg>
+          </span>
+          <span class="link-copy"><span class="link-title">Threads</span><span class="link-desc">Ikuti percakapan dan kabar terbaru</span></span>
+          <span class="arrow" aria-hidden="true">↗</span>
+        </a>
+      </nav>
     </section>
-    <footer>© <span id="year"></span> BIB NUMBER</footer>
+
+    <section class="qr-card" aria-labelledby="qr-heading">
+      <h2 class="qr-title" id="qr-heading"><span class="accent">SCAN</span> TO CONNECT</h2>
+      <p class="qr-sub">Pindai QR Code untuk membuka halaman<br>resmi Bib Number ini.</p>
+      <div id="qrcode" aria-label="QR Code menuju halaman Bib Number"><span style="color:#222;font-size:11px">Memuat QR Code…</span></div>
+      <p class="qr-status" id="qr-status">QR Code mengarah ke halaman ini.</p>
+      <button class="qr-download" id="download-qr" type="button">Unduh QR Code</button>
+    </section>
+
+    <footer>© <span id="year"></span> BIB NUMBER <span class="accent">•</span> ALL RIGHTS RESERVED</footer>
   </main>
 
-  <!-- QR dibuat dari URL halaman aktif. Setelah deploy, QR otomatis mengarah ke alamat website ini. -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script>
+    // URL publik yang akan dikodekan ke QR. Ubah hanya jika alamat GitHub Pages berubah.
+    const PUBLIC_PAGE_URL = "https://proletartech.github.io/NYOTNYOT.MARKET/";
+    const qrElement = document.getElementById("qrcode");
+    const statusElement = document.getElementById("qr-status");
     document.getElementById("year").textContent = new Date().getFullYear();
-    const target = window.location.href.split("#")[0];
-    const qr = document.getElementById("qrcode");
-    if (window.QRCode && target.startsWith("http")) {
-      qr.innerHTML = "";
-      new QRCode(qr, {text: target, width: 144, height: 144, colorDark: "#111111", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H});
+
+    if (window.QRCode) {
+      qrElement.innerHTML = "";
+      new QRCode(qrElement, {
+        text: PUBLIC_PAGE_URL,
+        width: 154,
+        height: 154,
+        colorDark: "#111111",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
     } else {
-      qr.innerHTML = '<span style="color:#222;font-size:12px;padding:12px">QR tersedia setelah halaman dibuka melalui URL website.</span>';
+      statusElement.textContent = "QR belum termuat. Periksa koneksi internet lalu muat ulang halaman.";
     }
+
+    document.getElementById("download-qr").addEventListener("click", () => {
+      const canvas = qrElement.querySelector("canvas");
+      const image = qrElement.querySelector("img");
+      const source = canvas ? canvas.toDataURL("image/png") : (image ? image.src : null);
+      if (!source) {
+        statusElement.textContent = "QR belum siap diunduh. Muat ulang halaman dan coba lagi.";
+        return;
+      }
+      const a = document.createElement("a");
+      a.href = source;
+      a.download = "bib-number-qr-code.png";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    });
   </script>
 </body>
 </html>
+'''
+
+(base / "index.html").write_text(html, encoding="utf-8")
+readme = """# BIB NUMBER — Official Links
+
+Landing page responsif untuk tautan resmi Bib Number:
+- Shopee
+- TikTok
+- Instagram
+- Threads
+
+## Publikasi di GitHub Pages
+1. Unggah `index.html` ke root repository `NYOTNYOT.MARKET`.
+2. Buka Settings → Pages.
+3. Source: Deploy from a branch.
+4. Branch: `main`, folder: `/ (root)`, lalu Save.
+5. Setelah Pages aktif, kunjungi https://proletartech.github.io/NYOTNYOT.MARKET/
+
+QR Code pada halaman dibuat otomatis dan mengarah ke URL GitHub Pages tersebut. Pengunjung dapat mengunduh QR dari tombol **Unduh QR Code**.
+
+## Mengubah tautan
+Edit atribut `href` pada masing-masing tautan di dalam `<nav class="links">`.
+"""
+(base / "README.md").write_text(readme, encoding="utf-8")
+zip_path = Path("/mnt/data/bib-number-link-hub-v2.zip")
+with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as z:
+    for p in base.iterdir():
+        z.write(p, arcname=f"bib-number-link-hub-v2/{p.name}")
+
+print(f"Website: {base/'index.html'}")
+print(f"Paket: {zip_path}")
