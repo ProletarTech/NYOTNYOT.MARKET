@@ -1,10 +1,4 @@
-from pathlib import Path
-import zipfile, textwrap
-
-out = Path("/mnt/data/bib-number-link-hub")
-out.mkdir(exist_ok=True)
-
-html = r'''<!doctype html>
+<!doctype html>
 <html lang="id">
 <head>
   <meta charset="utf-8">
@@ -94,32 +88,3 @@ html = r'''<!doctype html>
   </script>
 </body>
 </html>
-'''
-
-(out / "index.html").write_text(html, encoding="utf-8")
-readme = """# Bib Number Link Hub
-
-Website satu halaman berisi tautan Shopee, TikTok, Instagram, dan Threads.
-
-## Cara pakai
-1. Upload `index.html` ke repository GitHub.
-2. Buka **Settings → Pages**.
-3. Pada **Build and deployment**, pilih **Deploy from a branch**.
-4. Pilih branch `main` dan folder `/ (root)`, lalu Save.
-5. Setelah GitHub Pages aktif, buka URL website. QR Code dibuat otomatis dari URL halaman tersebut.
-
-QR tidak mengarah langsung ke salah satu platform. QR mengarah ke halaman ini, lalu pengunjung memilih tombol platform.
-
-## Mengubah tautan
-Edit nilai `href` pada masing-masing elemen `<a class="link">` di `index.html`.
-
-Catatan: QR generator menggunakan pustaka QRCode.js dari CDN, sehingga koneksi internet diperlukan saat halaman membuat QR.
-"""
-(out / "README.md").write_text(readme, encoding="utf-8")
-zip_path = Path("/mnt/data/bib-number-link-hub.zip")
-with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as z:
-    for p in out.iterdir():
-        z.write(p, arcname=f"bib-number-link-hub/{p.name}")
-
-print(f"Created: {out/'index.html'}")
-print(f"Created: {zip_path}")
