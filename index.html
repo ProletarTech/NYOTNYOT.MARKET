@@ -1,0 +1,125 @@
+from pathlib import Path
+import zipfile, textwrap
+
+out = Path("/mnt/data/bib-number-link-hub")
+out.mkdir(exist_ok=True)
+
+html = r'''<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101114">
+  <meta name="description" content="Temukan Bib Number di marketplace dan media sosial resmi.">
+  <title>Bib Number — Official Links</title>
+  <style>
+    :root{color-scheme:dark;--bg:#101114;--panel:#1a1c21;--line:#30333b;--muted:#a7abb5;--accent:#ff7548}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0%,#29201e 0,#101114 48%);color:#f7f7f8;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;display:grid;place-items:center;padding:28px 16px}
+    .wrap{width:min(100%,460px)}
+    header{text-align:center;margin-bottom:25px}
+    .mark{width:76px;height:76px;margin:0 auto 15px;border:1px solid #55505a;border-radius:22px;display:grid;place-items:center;background:linear-gradient(145deg,#292b31,#17181d);font-weight:900;font-size:22px;letter-spacing:-2px}
+    h1{font-size:29px;letter-spacing:2px;margin:0;font-weight:850}
+    .sub{color:var(--muted);font-size:12px;letter-spacing:2px;margin-top:8px}
+    .intro{color:#d1d3d8;text-align:center;font-size:14px;line-height:1.6;margin:22px 0}
+    .links{display:grid;gap:11px}
+    .link{display:flex;align-items:center;gap:14px;padding:15px 16px;border:1px solid var(--line);border-radius:16px;background:rgba(26,28,33,.92);color:inherit;text-decoration:none;transition:transform .18s,border-color .18s,background .18s}
+    .link:hover{transform:translateY(-2px);border-color:#77717a;background:#22242a}
+    .icon{width:43px;height:43px;flex:none;border-radius:13px;background:#2b2d34;display:grid;place-items:center;font-size:20px;font-weight:800}
+    .meta{min-width:0;flex:1}
+    .name{font-size:15px;font-weight:750}
+    .desc{font-size:12px;color:var(--muted);margin-top:3px}
+    .arrow{font-size:20px;color:#b9bbc2}
+    .qrbox{margin-top:24px;padding:18px;border:1px solid var(--line);border-radius:18px;background:rgba(26,28,33,.75);text-align:center}
+    .qrbox h2{font-size:13px;letter-spacing:1.2px;margin:0 0 12px}
+    #qrcode{display:inline-flex;align-items:center;justify-content:center;background:#fff;padding:10px;border-radius:10px;min-width:164px;min-height:164px}
+    #qrcode img,#qrcode canvas{display:block!important;max-width:144px}
+    .qrnote{font-size:11px;color:var(--muted);line-height:1.5;margin:11px 0 0}
+    footer{text-align:center;color:#777b85;font-size:11px;margin-top:22px}
+    @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div class="mark" aria-hidden="true">BN</div>
+      <h1>BIB NUMBER</h1>
+      <div class="sub">OFFICIAL SOCIAL & MARKETPLACE</div>
+    </header>
+    <p class="intro">Temukan Bib Number di platform pilihan kamu.</p>
+
+    <nav class="links" aria-label="Tautan resmi Bib Number">
+      <a class="link" href="https://s.shopee.co.id/7fbc0jbkAs" target="_blank" rel="noopener noreferrer">
+        <span class="icon" aria-hidden="true">🛍</span>
+        <span class="meta"><span class="name">Shopee</span><span class="desc">Belanja produk Bib Number</span></span>
+        <span class="arrow" aria-hidden="true">↗</span>
+      </a>
+      <a class="link" href="https://vt.tiktok.com/ZS9PyUQ3nk3K3-FrKZF/" target="_blank" rel="noopener noreferrer">
+        <span class="icon" aria-hidden="true">♪</span>
+        <span class="meta"><span class="name">TikTok</span><span class="desc">Video dan konten terbaru</span></span>
+        <span class="arrow" aria-hidden="true">↗</span>
+      </a>
+      <a class="link" href="https://www.instagram.com/bib.number/" target="_blank" rel="noopener noreferrer">
+        <span class="icon" aria-hidden="true">◎</span>
+        <span class="meta"><span class="name">Instagram</span><span class="desc">Galeri dan informasi produk</span></span>
+        <span class="arrow" aria-hidden="true">↗</span>
+      </a>
+      <a class="link" href="https://www.threads.com/@bib.number" target="_blank" rel="noopener noreferrer">
+        <span class="icon" aria-hidden="true">@</span>
+        <span class="meta"><span class="name">Threads</span><span class="desc">Diskusi dan update terbaru</span></span>
+        <span class="arrow" aria-hidden="true">↗</span>
+      </a>
+    </nav>
+
+    <section class="qrbox" aria-label="QR Code halaman ini">
+      <h2>SCAN TO CONNECT</h2>
+      <div id="qrcode" aria-live="polite"><span style="color:#222;font-size:12px">Memuat QR…</span></div>
+      <p class="qrnote" id="qrnote">QR Code akan mengarah ke halaman ini setelah website dipublikasikan.</p>
+    </section>
+    <footer>© <span id="year"></span> BIB NUMBER</footer>
+  </main>
+
+  <!-- QR dibuat dari URL halaman aktif. Setelah deploy, QR otomatis mengarah ke alamat website ini. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+    const target = window.location.href.split("#")[0];
+    const qr = document.getElementById("qrcode");
+    if (window.QRCode && target.startsWith("http")) {
+      qr.innerHTML = "";
+      new QRCode(qr, {text: target, width: 144, height: 144, colorDark: "#111111", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H});
+    } else {
+      qr.innerHTML = '<span style="color:#222;font-size:12px;padding:12px">QR tersedia setelah halaman dibuka melalui URL website.</span>';
+    }
+  </script>
+</body>
+</html>
+'''
+
+(out / "index.html").write_text(html, encoding="utf-8")
+readme = """# Bib Number Link Hub
+
+Website satu halaman berisi tautan Shopee, TikTok, Instagram, dan Threads.
+
+## Cara pakai
+1. Upload `index.html` ke repository GitHub.
+2. Buka **Settings → Pages**.
+3. Pada **Build and deployment**, pilih **Deploy from a branch**.
+4. Pilih branch `main` dan folder `/ (root)`, lalu Save.
+5. Setelah GitHub Pages aktif, buka URL website. QR Code dibuat otomatis dari URL halaman tersebut.
+
+QR tidak mengarah langsung ke salah satu platform. QR mengarah ke halaman ini, lalu pengunjung memilih tombol platform.
+
+## Mengubah tautan
+Edit nilai `href` pada masing-masing elemen `<a class="link">` di `index.html`.
+
+Catatan: QR generator menggunakan pustaka QRCode.js dari CDN, sehingga koneksi internet diperlukan saat halaman membuat QR.
+"""
+(out / "README.md").write_text(readme, encoding="utf-8")
+zip_path = Path("/mnt/data/bib-number-link-hub.zip")
+with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as z:
+    for p in out.iterdir():
+        z.write(p, arcname=f"bib-number-link-hub/{p.name}")
+
+print(f"Created: {out/'index.html'}")
+print(f"Created: {zip_path}")
